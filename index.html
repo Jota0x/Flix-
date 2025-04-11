@@ -1,11 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Catálogo de Filmes</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header>
+        <nav>
+            <div class="logo">Catálogo de Filmes</div>
+            <ul class="links">
+                <article>
+                    <a href="Populares.html">Populares</a>
+                </article>
+                <article>
+                    <a href="Gêneros.html">Gêneros</a>
+                </article>
+                <article>
+                    <a href="Favoritos.html">Favoritos</a>
+                </article>
+                <article>
+                    <a href="index.html">Início</a>
+                </article>
+            </ul>
+            <div class="barra-de-pesquisa">
+                <input type="text" id="search-input" placeholder="Buscar filmes...">
+                <button id="search-button">Buscar</button>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="carrossel">
+            <h2>Filmes em Destaque</h2>
+            <div class="carrossel-container">
+                <input type="radio" name="slide" id="slide1" checked>
+                <input type="radio" name="slide" id="slide2">
+                <input type="radio" name="slide" id="slide3">
+                <input type="radio" name="slide" id="slide4">
+                <input type="radio" name="slide" id="slide5">
+
+                <div class="slides">
+                    <div class="slide" id="s1">
+                        <article class="filme">
+                            <img src="images/Godfather.jpg" alt="O Poderoso Chefão">
+                            
+                        </article>
+                    </div>
+                    <div class="slide" id="s2">
+                        <article class="filme">
+                            <img src="images/llista.jpg" alt="A Lista de Schindler">
+                            
+                        </article>
+                    </div>
+                    <div class="slide" id="s3">
+                        <article class="filme">
+                            <img src="images/batman.jpg" alt="Batman: O Cavaleiro das Trevas">
+                            
+                        </article>
+                    </div>
+                    <div class="slide" id="s4">
+                        <article class="filme">
+                            <img src="images/interestelar.jpg" alt="Interestelar">
+                           
+                        </article>
+                    </div>
+                    <div class="slide" id="s5">
+                        <article class="filme">
+                            <img src="images/cidadededeus.jpg" alt="Cidade de Deus">
+                            
+                        </article>
+                    </div>
+                </div>
+                </section>
+
+                <div class="navegacao">
+                    <label for="slide1" class="barra"></label>
+                    <label for="slide2" class="barra"></label>
+                    <label for="slide3" class="barra"></label>
+                    <label for="slide4" class="barra"></label>
+                    <label for="slide5" class="barra"></label>
+                </div>
+            </div>
+        </section>
+        <section class="Catálogo">
+            <h1>Outros Filmes</h1>
+            <div class="todosfilmes">
+            <article class="Filmes-cat">
+                <img src="images/Chihiro.jpg" alt="">
+
+            </article>
+            <article class="Filmes-cat">
+                <img src="images/venom.jpg" alt="">
+
+            </article>
+            <article class="Filmes-cat">
+                <img src="images/deadpool.jpg" alt="">
+
+            </article>
+            <article class="Filmes-cat">
+                <img src="images/natal.jpg" alt="">
+
+            </article>
+            <article class="Filmes-cat">
+                <img src="images/mufasa.jpg" alt="">
+
+            </article>
+            </div>
+
+        </section>
     
+</section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Catálogo de Filmes.</p>
+    </footer>
 </body>
 </html>
