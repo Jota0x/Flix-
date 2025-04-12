@@ -6,15 +6,44 @@
   <title>Flix+</title>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
-  <header class="header">
-    <div class="logo">Flix+</div>
-    <input type="text" id="search-input" placeholder="Buscar filmes..." />
+  <div class="container my-4">
+    <label for="genre-filter" class="form-label text-white">Filtrar por Gênero:</label>
+    <select id="genre-filter" class="form-select">
+      <option value="">Todos</option>
+    </select>
+  </div>
+  
+  <header class="brand-header">
+    <div class="brand-container">
+      <div class="main-brand">FLIX+</div>
+      
+      <div class="brand-scroller">
+        <div class="brand-scroll-container">
+          <span class="brand-tag">ORIGINAIS</span>
+          <span class="brand-tag">FILMES</span>
+          <span class="brand-tag">SÉRIES</span>
+          <span class="brand-tag">ANIMAÇÃO</span>
+          <span class="brand-tag">LANÇAMENTOS</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <div class="search-container">
+          <i class="fas fa-search"></i>
+          <input type="text" id="search-input" placeholder="Buscar..."/>
+        </div>
+        <button class="profile-button">
+          <i class="fas fa-user"></i>
+        </button>
+      </div>
+    </div>
   </header>
 
   <section id="destaque" class="container my-5">
-    <h2 class="text-light text-center mb-4">Filmes em Destaque</h2>
+  
     <div id="carouselFilmes" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-inner" id="carousel-inner"></div>
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselFilmes" data-bs-slide="prev">
@@ -31,7 +60,6 @@
   </section>
 
   <main class="catalogo">
-    <h2>Todos os Filmes</h2>
     <div id="filmes" class="filmes-container"></div>
     <div class="text-center my-4" id="loading-message">Carregando...</div>
     </div>
@@ -49,21 +77,17 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
-          <p><strong>Sinopse:</strong></p>
-          <p id="modalSinopse"></p>
-  
-          <p><strong>Elenco:</strong></p>
-          <ul id="modalElenco"></ul>
-  
-          <p><strong>Trailer:</strong></p>
-          <div id="modalTrailer"></div>
-        </div>
+  <h5 id="modalTitulo"></h5>
+  <p id="modalSinopse"></p>
+  <ul id="modalElenco"></ul>
+  <div id="modalTrailer" class="mb-3"></div>
+  <button id="btnFavorito" class="btn btn-warning">Favoritar</button>
+</div>
       </div>
     </div>
   </div>
   
-  <input id="search-input" type="text" placeholder="Buscar filmes..." />
-  <select id="genre-filter"></select>
+
   <script src="script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

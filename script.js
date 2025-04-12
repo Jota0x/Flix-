@@ -16,16 +16,26 @@ async function buscarFilmes(page = 1) {
   if (carregando) return;
   carregando = true;
 
+  // Construção da URL
   let url = `${baseUrl}/discover/movie?api_key=${apiKey}&language=pt-BR&page=${page}`;
   if (currentGenre) url += `&with_genres=${currentGenre}`;
   if (searchQuery) {
     url = `${baseUrl}/search/movie?api_key=${apiKey}&language=pt-BR&query=${searchQuery}&page=${page}`;
   }
 
+  console.log('Buscando URL:', url);  // Para testar
+
+  // Chama a API
   const res = await fetch(url);
   const data = await res.json();
-  filmes = filmes.concat(data.results);
-  exibirFilmes(data.results);
+  
+  if (data.results && data.results.length > 0) {
+    filmes = filmes.concat(data.results);
+    exibirFilmes(data.results);
+  } else {
+    console.log("Nenhum filme encontrado");
+  }
+
   carregando = false;
 }
 
