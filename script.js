@@ -8,71 +8,118 @@ let searchQuery = '';
 let filmes = [];
 let carregando = false;
 
-const filmesContainer = document.getElementById('filmes');
-const searchInput = document.getElementById('search-input');
-const genreFilter = document.getElementById('genre-filter');
+document.addEventListener('DOMContentLoaded', () => {
+  const filmesContainer = document.getElementById('filmes');
+  const searchInput = document.getElementById('search-input');
+  const genreFilter = document.getElementById('genre-filter');
 
-async function buscarFilmes(page = 1) {
-  if (carregando) return;
-  carregando = true;
+  async function buscarFilmes(page = 1) {
+    if (carregando) return;
+    carregando = true;
 
-  // Construção da URL
-  let url = `${baseUrl}/discover/movie?api_key=${apiKey}&language=pt-BR&page=${page}`;
-  if (currentGenre) url += `&with_genres=${currentGenre}`;
-  if (searchQuery) {
-    url = `${baseUrl}/search/movie?api_key=${apiKey}&language=pt-BR&query=${searchQuery}&page=${page}`;
+    if (page === 1) filmesContainer.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div></div>';
+
+    let url = `${baseUrl}/discover/movie?api_key=${apiKey}&language=pt-BR&page=${page}`;
+    if (currentGenre) url += `&with_genres=${currentGenre}`;
+    if (searchQuery) {
+      url = `${baseUrl}/search/movie?api_key=${apiKey}&language=pt-BR&query=${searchQuery}&page=${page}`;
+    }
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (page === 1) filmesContainer.innerHTML = '';
+
+      if (data.results && data.results.length > 0) {
+        filmes = filmes.concat(data.results);
+        exibirFilmes(data.results);
+      } else if (page === 1) {
+        filmesContainer.innerHTML = '<p class="text-center py-5">Nenhum filme encontrado.</p>';
+      }
+    } catch (error) {
+      console.error("Erro ao buscar filmes:", error);
+      if (page === 1) filmesContainer.innerHTML = '<p class="text-center py-5">Erro ao carregar filmes.</p>';
+    } finally {
+      carregando = false;
+    }
   }
 
-  console.log('Buscando URL:', url);  // Para testar
-
-  // Chama a API
-  const res = await fetch(url);
-  const data = await res.json();
-  
-  if (data.results && data.results.length > 0) {
-    filmes = filmes.concat(data.results);
-    exibirFilmes(data.results);
-  } else {
-    console.log("Nenhum filme encontrado");
+  function exibirFilmes(lista) {
+    lista.forEach(filme => {
+      if (!filme.poster_path) return;
+      
+      const div = document.createElement("div");
+      div.className = "col-6 col-sm-4 col-md-3 col-lg-2 d-flex justify-content-center filme mb-4";
+      div.innerHTML = `
+        <img src="https://image.tmdb.org/t/p/w500${filme.poster_path}" alt="${filme.title}" class="img-fluid" onclick="abrirModal(${filme.id})">
+      `;
+      filmesContainer.appendChild(div);
+    });
   }
 
-  carregando = false;
-}
+  async function abrirModal(id) {
+    try {
+      const [detalhes, creditos, videos] = await Promise.all([
+        fetch(`${baseUrl}/movie/${id}?api_key=${apiKey}&language=pt-BR`).then(r => r.json()),
+        fetch(`${baseUrl}/movie/${id}/credits?api_key=${apiKey}&language=pt-BR`).then(r => r.json()),
+        fetch(`${baseUrl}/movie/${id}/videos?api_key=${apiKey}&language=pt-BR`).then(r => r.json())
+      ]);
 
-function exibirFilmes(lista) {
-  lista.forEach(filme => {
-    const div = document.createElement('div');
-    div.className = 'filme';
-    div.innerHTML = `
-      <img src="${imgBaseUrl}${filme.poster_path}" alt="${filme.title}" onclick="abrirModal(${filme.id})">
-    `;
-    filmesContainer.appendChild(div);
-  });
-}
+      document.getElementById('modalTitulo').innerText = detalhes.title || 'Título não disponível';
+      document.getElementById('modalSinopse').innerText = detalhes.overview || 'Sinopse não disponível.';
 
-async function abrirModal(id) {
-  const [detalhes, creditos, videos] = await Promise.all([
-    fetch(`${baseUrl}/movie/${id}?api_key=${apiKey}&language=pt-BR`).then(r => r.json()),
-    fetch(`${baseUrl}/movie/${id}/credits?api_key=${apiKey}&language=pt-BR`).then(r => r.json()),
-    fetch(`${baseUrl}/movie/${id}/videos?api_key=${apiKey}&language=pt-BR`).then(r => r.json())
-  ]);
+      const elenco = creditos.cast?.slice(0, 5).map(a => `<li>${a.name}</li>`).join('') || '<li>Elenco não disponível</li>';
+      document.getElementById('modalElenco').innerHTML = elenco;
 
-  document.getElementById('modalTitulo').innerText = detalhes.title;
-  document.getElementById('modalSinopse').innerText = detalhes.overview;
+      const trailer = videos.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+      document.getElementById('modalTrailer').innerHTML = trailer
+        ? `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${trailer.key}" frameborder="0" allowfullscreen></iframe>`
+        : '<p>Trailer não disponível.</p>';
 
-  const elenco = creditos.cast.slice(0, 5).map(a => `<li>${a.name}</li>`).join('');
-  document.getElementById('modalElenco').innerHTML = elenco;
+      // Botão de favorito
+      const modalAcoes = document.getElementById('modalAcoes');
+      modalAcoes.innerHTML = '';
+      
+      const btnFavorito = document.createElement('button');
+      btnFavorito.className = 'btn btn-danger';
+      
+      const favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
+      const jaFavoritado = favoritos.includes(id);
+      
+      btnFavorito.innerHTML = jaFavoritado 
+        ? '<i class="bi bi-heart-fill me-2"></i> Remover dos Favoritos' 
+        : '<i class="bi bi-heart me-2"></i> Adicionar aos Favoritos';
+      
+      btnFavorito.onclick = () => {
+        toggleFavorito(id);
+        btnFavorito.innerHTML = favoritos.includes(id)
+          ? '<i class="bi bi-heart-fill me-2"></i> Remover dos Favoritos'
+          : '<i class="bi bi-heart me-2"></i> Adicionar aos Favoritos';
+      };
+      
+      modalAcoes.appendChild(btnFavorito);
 
-  const trailer = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
-  document.getElementById('modalTrailer').innerHTML = trailer
-    ? `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${trailer.key}" frameborder="0" allowfullscreen></iframe>`
-    : '<p>Trailer não disponível.</p>';
+      new bootstrap.Modal(document.getElementById('modalFilme')).show();
+    } catch (error) {
+      console.error("Erro ao abrir modal:", error);
+      alert('Erro ao carregar detalhes do filme.');
+    }
+  }
 
-  new bootstrap.Modal(document.getElementById('modalFilme')).show();
-}
+  function toggleFavorito(id) {
+    let favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
+    
+    if (favoritos.includes(id)) {
+      favoritos = favoritos.filter(filmeId => filmeId !== id);
+    } else {
+      favoritos.push(id);
+    }
+    
+    localStorage.setItem('favoritos', JSON.stringify(favoritos));
+  }
 
-// Scroll infinito
-function checarScroll() {
+  function checarScroll() {
     const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
     if (scrollTop + clientHeight >= scrollHeight - 300 && !carregando) {
       currentPage++;
@@ -80,69 +127,108 @@ function checarScroll() {
     }
   }
 
-searchInput.addEventListener('input', () => {
-  searchQuery = searchInput.value;
-  currentPage = 1;
-  filmes = [];
-  filmesContainer.innerHTML = '';
-  buscarFilmes();
-});
-
-genreFilter.addEventListener('change', () => {
-  currentGenre = genreFilter.value;
-  currentPage = 1;
-  filmes = [];
-  filmesContainer.innerHTML = '';
-  buscarFilmes();
-});
-
-async function carregarGeneros() {
-  const res = await fetch(`${baseUrl}/genre/movie/list?api_key=${apiKey}&language=pt-BR`);
-  const data = await res.json();
-  data.genres.forEach(genero => {
-    const opt = document.createElement('option');
-    opt.value = genero.id;
-    opt.textContent = genero.name;
-    genreFilter.appendChild(opt);
-  });
-}
-
-async function carregarFilmesDestaque() {
-    const res = await fetch(`${baseUrl}/movie/popular?api_key=${apiKey}&language=pt-BR&page=1`);
-    const data = await res.json();
-    const destaques = data.results.slice(0, 5); // primeiros 5
   
-    const carousel = document.getElementById('carousel-inner');
-    carousel.innerHTML = '';
-  
-    destaques.forEach((filme, index) => {
-      const item = document.createElement('div');
-      item.className = `carousel-item ${index === 0 ? 'active' : ''}`;
-      item.innerHTML = `
-        <img src="${imgBaseUrl}${filme.backdrop_path}" class="d-block w-100" alt="${filme.title}" style="border-radius:10px; cursor:pointer" onclick="abrirModal(${filme.id})">
-      `;
-      carousel.appendChild(item);
+  if (searchInput) {
+    let timeout;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        searchQuery = searchInput.value.trim();
+        currentPage = 1;
+        filmes = [];
+        buscarFilmes();
+      }, 500);
     });
   }
-  
 
-async function carregarFavoritos() {
-  const favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
-  filmesContainer.innerHTML = '';
-  for (let id of favoritos) {
-    const res = await fetch(`${baseUrl}/movie/${id}?api_key=${apiKey}&language=pt-BR`);
-    const filme = await res.json();
-    exibirFilmes([filme]);
+  if (genreFilter) {
+    genreFilter.addEventListener('change', () => {
+      currentGenre = genreFilter.value;
+      currentPage = 1;
+      filmes = [];
+      buscarFilmes();
+    });
   }
-}
 
-// Roteamento
-if (window.location.pathname.includes('favoritos.html')) {
-  carregarFavoritos();
-} else {
-  buscarFilmes();
-  carregarGeneros();
-  window.addEventListener('scroll', checarScroll);
-  carregarFilmesDestaque();
-}
-window.addEventListener('scroll', checarScroll);
+  async function carregarGeneros() {
+    try {
+      const res = await fetch(`${baseUrl}/genre/movie/list?api_key=${apiKey}&language=pt-BR`);
+      const data = await res.json();
+      genreFilter.innerHTML = '<option value="">Gêneros</option>';
+      data.genres.forEach(genero => {
+        const opt = document.createElement('option');
+        opt.value = genero.id;
+        opt.textContent = genero.name;
+        genreFilter.appendChild(opt);
+      });
+    } catch (error) {
+      console.error("Erro ao carregar gêneros:", error);
+    }
+  }
+
+  async function carregarFilmesDestaque() {
+    try {
+      const res = await fetch(`${baseUrl}/movie/popular?api_key=${apiKey}&language=pt-BR&page=1`);
+      const data = await res.json();
+      const destaques = data.results.slice(0, 5);
+
+      const carousel = document.getElementById('carousel-inner');
+      carousel.innerHTML = '';
+
+      destaques.forEach((filme, index) => {
+        if (!filme.backdrop_path) return;
+        
+        const item = document.createElement('div');
+        item.className = `carousel-item ${index === 0 ? 'active' : ''}`;
+        item.innerHTML = `
+          <img src="${imgBaseUrl}${filme.backdrop_path}" class="d-block w-100" alt="${filme.title}" style="height: 400px; object-fit: cover; cursor:pointer" onclick="abrirModal(${filme.id})">
+          <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded">
+            <h5>${filme.title}</h5>
+          </div>
+        `;
+        carousel.appendChild(item);
+      });
+    } catch (error) {
+      console.error("Erro ao carregar destaques:", error);
+    }
+  }
+
+  async function carregarFavoritos() {
+    const favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
+    filmesContainer.innerHTML = '';
+    
+    if (favoritos.length === 0) {
+      filmesContainer.innerHTML = '<p class="text-center py-5">Nenhum filme favoritado ainda.</p>';
+      return;
+    }
+
+    try {
+      const promises = favoritos.map(id => 
+        fetch(`${baseUrl}/movie/${id}?api_key=${apiKey}&language=pt-BR`).then(r => r.json())
+      );
+      const filmesFavoritos = await Promise.all(promises);
+      exibirFilmes(filmesFavoritos.filter(f => f.poster_path));
+    } catch (error) {
+      console.error("Erro ao carregar favoritos:", error);
+      filmesContainer.innerHTML = '<p class="text-center py-5">Erro ao carregar favoritos.</p>';
+    }
+  }
+
+  if (window.location.pathname.includes('favoritos.html')) {
+    carregarFavoritos();
+  } else {
+    buscarFilmes();
+    carregarGeneros();
+    carregarFilmesDestaque();
+    window.addEventListener('scroll', checarScroll);
+  }
+});
+
+window.abrirModal = function(id) {
+  const event = new Event('DOMContentLoaded');
+  document.dispatchEvent(event);
+  document.addEventListener('DOMContentLoaded', () => {
+    const func = () => abrirModal(id);
+    func();
+  }, { once: true });
+};
