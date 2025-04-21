@@ -224,6 +224,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+document.querySelectorAll('.filme img').forEach(img => {
+  img.addEventListener('load', function() {
+    this.closest('.filme').classList.add('loaded');
+  });
+  
+  if (img.complete) {
+    img.closest('.filme').classList.add('loaded');
+  }
+});
+
 window.abrirModal = function(id) {
   const event = new Event('DOMContentLoaded');
   document.dispatchEvent(event);
@@ -231,4 +241,44 @@ window.abrirModal = function(id) {
     const func = () => abrirModal(id);
     func();
   }, { once: true });
+  window.abrirModal = async function(id) {
+    const [detalhes, creditos, videos] = await Promise.all([
+      fetch(`${baseUrl}/movie/${id}?api_key=${apiKey}&language=pt-BR`).then(r => r.json()),
+      fetch(`${baseUrl}/movie/${id}/credits?api_key=${apiKey}&language=pt-BR`).then(r => r.json()),
+      fetch(`${baseUrl}/movie/${id}/videos?api_key=${apiKey}&language=pt-BR`).then(r => r.json())
+    ]);
+  
+    document.getElementById('modalTitulo').innerText = detalhes.title || 'Título não disponível';
+    document.getElementById('modalSinopse').innerText = detalhes.overview || 'Sinopse não disponível.';
+  
+    const elenco = creditos.cast?.slice(0, 5).map(a => `<li>${a.name}</li>`).join('') || '<li>Elenco não disponível</li>';
+    document.getElementById('modalElenco').innerHTML = elenco;
+  
+    const trailer = videos.results?.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+    document.getElementById('modalTrailer').innerHTML = trailer
+      ? `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${trailer.key}" frameborder="0" allowfullscreen></iframe>`
+      : '<p>Trailer não disponível.</p>';
+  
+    const modalAcoes = document.getElementById('modalAcoes');
+    modalAcoes.innerHTML = '';
+    
+    const favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
+    const btnFavorito = document.createElement('button');
+    btnFavorito.className = 'btn btn-danger';
+    btnFavorito.innerHTML = favoritos.includes(id)
+      ? '<i class="bi bi-heart-fill me-2"></i> Remover dos Favoritos'
+      : '<i class="bi bi-heart me-2"></i> Adicionar aos Favoritos';
+    
+    btnFavorito.onclick = () => {
+      toggleFavorito(id);
+      btnFavorito.innerHTML = favoritos.includes(id)
+        ? '<i class="bi bi-heart-fill me-2"></i> Remover dos Favoritos'
+        : '<i class="bi bi-heart me-2"></i> Adicionar aos Favoritos';
+    };
+    
+    modalAcoes.appendChild(btnFavorito);
+  
+    new bootstrap.Modal(document.getElementById('modalFilme')).show();
+    
+  };
 };

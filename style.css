@@ -80,17 +80,38 @@ img {
 .filme {
   width: 150px;
   margin: 10px;
-  transition: transform 0.3s ease;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
 }
 
-.filme img {
-  width: 100% !important;
-  height: auto !important;
-  object-fit: cover !important;
+.filme:hover {
+  transform: scale(1.05);
+}
+
+.filme::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, #0d1117 0%, #1a2639 50%, #0d1117 100%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  z-index: 1;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.filme.loaded::before {
+  display: none;
 }
 
 .filme img:hover {
-  transform: scale(1.05);
   box-shadow: 0 0 20px rgba(30, 144, 255, 0.5);
 }
 
@@ -110,6 +131,8 @@ img {
   background-color: #161b22;
   color: white;
   border-radius: 10px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
 
 .modal-header {
@@ -135,14 +158,36 @@ footer {
 }
 
 #btnFavorito {
-  background-color: #1e90ff;
-  border: none;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 6px;
-  transition: background-color 0.3s ease;
+  background-color: var(--primary-color);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
 }
 
 #btnFavorito:hover {
   background-color: #1c7ed6;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a:focus, button:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
 }
